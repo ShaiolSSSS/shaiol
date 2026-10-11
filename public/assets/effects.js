@@ -1,3 +1,5 @@
+import Lenis from "./vendor/lenis-1.3.26.js";
+
 const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -54,72 +56,43 @@ window.addEventListener("blur", hideCursor);
 document.addEventListener("keydown", hideCursor);
 finePointer.addEventListener("change", hideCursor);
 
-// Interpolate the real scroll position rather than translating the page.
-// Fixed navigation, anchors, selection and the scrollbar therefore keep their normal behavior.
-let scrollFrame = 0, scrollTarget = scrollY, expectedY = scrollY, lastScrollTime = 0;
-const maxScroll = () => Math.max(0, document.documentElement.scrollHeight - innerHeight);
-const clampScroll = value => Math.max(0, Math.min(maxScroll(), value));
-
-function stopScroll() {
-  cancelAnimationFrame(scrollFrame);
-  scrollFrame = 0;
-  scrollTarget = expectedY = scrollY;
-  lastScrollTime = 0;
-  document.documentElement.classList.remove("has-scroll-inertia");
-}
-
-function drawScroll(time) {
-  scrollFrame = 0;
-  if (reducedMotion.matches || hasModal()) { stopScroll(); return; }
-  const elapsed = Math.min(time - lastScrollTime || 16, 50);
-  lastScrollTime = time;
-  scrollTarget = clampScroll(scrollTarget);
-  const distance = scrollTarget - expectedY;
-  expectedY = Math.abs(distance) < .5 ? scrollTarget : expectedY + distance * (1 - Math.exp(-elapsed / 125));
-  window.scrollTo({top: expectedY, behavior: "instant"});
-  if (Math.abs(scrollTarget - expectedY) > .5) scrollFrame = requestAnimationFrame(drawScroll);
-  else stopScroll();
-}
-
-function usesNativeScroll(element) {
-  if (element?.closest("input, textarea, select, [contenteditable], iframe")) return true;
-  for (let node = element; node && node !== document.body && node !== document.documentElement; node = node.parentElement) {
-    const style = getComputedStyle(node);
-    if (/(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight + 1) return true;
-  }
-  return false;
-}
-
-window.addEventListener("wheel", event => {
-  if (!finePointer.matches || reducedMotion.matches || hasModal() || !event.cancelable ||
-      event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey ||
-      Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY ||
-      usesNativeScroll(event.target instanceof Element ? event.target : null)) {
-    stopScroll();
+// Lenis keeps one continuous animation across wheel bursts and normalizes input devices.
+// Suspend it entirely for modals and reduced motion so browser-native input stays available.
+let smoothScroll = null;
+function updateScroll() {
+  const enabled = finePointer.matches && !reducedMotion.matches && !hasModal() && !document.hidden;
+  if (!enabled) {
+    smoothScroll?.destroy();
+    smoothScroll = null;
     return;
   }
-  const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
-  if (!scrollFrame) scrollTarget = expectedY = scrollY;
-  const destination = clampScroll(scrollTarget + event.deltaY * unit);
-  if (destination === scrollY && !scrollFrame) return;
-  event.preventDefault();
-  scrollTarget = destination;
-  document.documentElement.classList.add("has-scroll-inertia");
-  if (!scrollFrame) scrollFrame = requestAnimationFrame(drawScroll);
-}, {passive: false});
-
-// Stop immediately when another input method or browser navigation takes over.
-window.addEventListener("scroll", () => {
-  if (scrollFrame && Math.abs(scrollY - expectedY) > 2) stopScroll();
-}, {passive: true});
-for (const event of ["pointerdown", "touchstart", "keydown", "resize", "hashchange", "pagehide", "blur"]) {
-  window.addEventListener(event, stopScroll, {passive: true});
+  if (smoothScroll) return;
+  smoothScroll = new Lenis({
+    autoRaf: true,
+    lerp: .075,
+    smoothWheel: true,
+    syncTouch: false,
+    anchors: true,
+    allowNestedScroll: true,
+    stopInertiaOnNavigate: true,
+    prevent: node => node.matches("input, textarea, select, [contenteditable], iframe"),
+    virtualScroll: ({event, deltaX, deltaY}) => !event.metaKey && !event.shiftKey && Math.abs(deltaY) >= Math.abs(deltaX),
+  });
 }
-finePointer.addEventListener("change", stopScroll);
-reducedMotion.addEventListener("change", stopScroll);
+function interruptScroll() {
+  smoothScroll?.scrollTo(window.scrollY, {immediate: true});
+}
+for (const event of ["pointerdown", "touchstart", "keydown", "blur"]) {
+  window.addEventListener(event, interruptScroll, {passive: true});
+}
+finePointer.addEventListener("change", updateScroll);
+reducedMotion.addEventListener("change", updateScroll);
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) { hideCursor(); stopScroll(); }
+  if (document.hidden) hideCursor();
+  updateScroll();
 });
 new MutationObserver(() => {
-  if (hasModal()) { hideCursor(); stopScroll(); }
+  if (hasModal()) hideCursor();
+  updateScroll();
 }).observe(document.body, {subtree: true, attributes: true, attributeFilter: ["open"]});
+updateScroll();

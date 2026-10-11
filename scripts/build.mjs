@@ -1,7 +1,10 @@
 import {readFile,mkdir,writeFile,cp} from "node:fs/promises";
 import {resolve} from "node:path";
+import {createHash} from "node:crypto";
 import {readJournal,journalIndex,journalEntry,escapeHTML} from "./journal.mjs";
 const root=resolve(import.meta.dirname,"..");
+const assets=await Promise.all(["site.css","site.js","effects.js"].map(name=>readFile(resolve(root,"public/assets",name),"utf8")));
+const assetVersion=createHash("sha256").update(assets.join("\n")).digest("hex").slice(0,12);
 const base="/"+(process.env.BASE_PATH||"/shaiol").replace(/^\/+|\/+$/g,"");
 const prefix=base==="/"?"/":base+"/";
 const site="https://shaiolssss.github.io"+prefix;
@@ -14,8 +17,9 @@ const menu='<dialog id="site-menu" class="menu-dialog" aria-label="网站菜单"
 const gate='<dialog class="secretdialog" aria-labelledby="secret-title"><button class="close" aria-label="关闭">×</button><span class="dialogstar" aria-hidden="true">✦</span><p class="eyebrow">A QUIET LITTLE DOOR</p><h2 id="secret-title">你找到了星门。</h2><p class="dialogdescription">每日的开发与学习记录，藏在另一边。</p><form><label for="secret-code">通行口令</label><input id="secret-code" type="password" autocomplete="current-password" required maxlength="128" placeholder="输入你的神奇代码"><p role="status" class="formmessage"></p><button class="unlock">打开星门 ↗</button></form><p class="dialogfootnote">日志已公开，也可以通过直接链接阅读。</p></dialog>';
 const footer='<footer class="site-footer"><div class="footer-top"><a href="'+prefix+'" aria-label="Shaiol 首页">'+mark+'</a></div><div class="footer-bottom"><span>© 2026 SHAIOL</span><nav aria-label="页脚导航">'+links.map(([p,,zh])=>'<a href="'+href(p)+'">'+zh+'</a>').join("")+'</nav><button class="secretstar" aria-label="星星">✦</button></div></footer>'+gate;
 function rewrite(main){return main.replace(/href="(\/[^"]*)"/g,(_,url)=>{const [path,hash]=url.split("#");return 'href="'+href(path.replace(/^\/+|\/+$/g,""))+(hash?"#"+hash:"")+'"';});}
-function document(title,main,current,url){return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHTML(title)+'</title><meta name="description" content="Shaiol 的个人网站、作品与公开创作笔记。"><meta name="theme-color" content="#ffffff"><link rel="canonical" href="'+url+'"><link rel="icon" href="'+prefix+'assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="'+prefix+'assets/site.css"><script type="module" src="'+prefix+'assets/site.js"></script></head><body data-base="'+prefix+'">'+header(current)+menu+'<div class="page-enter">'+main+'</div>'+footer+'</body></html>';}
+function document(title,main,current,url){return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHTML(title)+'</title><meta name="description" content="Shaiol 的个人网站、作品与公开创作笔记。"><meta name="theme-color" content="#ffffff"><link rel="canonical" href="'+url+'"><link rel="icon" href="'+prefix+'assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="'+prefix+'assets/site.css?v='+assetVersion+'"><script type="module" src="'+prefix+'assets/site.js?v='+assetVersion+'"></script></head><body data-base="'+prefix+'">'+header(current)+menu+'<div class="page-enter">'+main+'</div>'+footer+'</body></html>';}
 const dist=resolve(root,"dist");await mkdir(dist,{recursive:true});await cp(resolve(root,"public"),dist,{recursive:true});
+await writeFile(resolve(dist,"assets/site.js"),assets[1].replace('"./effects.js"','"./effects.js?v='+assetVersion+'"'));
 for(const page of pages){const main=rewrite(await readFile(resolve(root,"src/pages/"+page.source+".html"),"utf8"));const dir=resolve(dist,page.path);await mkdir(dir,{recursive:true});await writeFile(resolve(dir,"index.html"),document(page.title,main,page.nav,site+(page.path?page.path+"/":"")));}
 const entries=await readJournal(root);
 const journalDir=resolve(dist,"logs");await mkdir(journalDir,{recursive:true});

@@ -1,3 +1,4 @@
+import "./effects.js";
 const base=document.body.dataset.base;
 const menu=document.querySelector("#site-menu"),toggle=document.querySelector(".menu-toggle");
 toggle.addEventListener("click",()=>{menu.showModal();toggle.setAttribute("aria-expanded","true");document.body.style.overflow="hidden";});

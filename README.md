@@ -15,6 +15,20 @@
 仓库和日志均公开，不保存密码、口令原文、令牌、私钥、私人联系方式、无关个人信息或完整聊天记录。
 旧 `Work-Journal` 私有仓库保留为迁移前的备份；2026-10-10 起，新日志只写入本仓库。
 
+## 项目工作台
+
+独立入口：<https://shaiolssss.github.io/shaiol/workspace/>。不加入博客的首页／作品／关于主导航，使用单独的页面布局和交互。
+
+支持任务表、甘特图、流程看板、负责人、阶段、排期、前置关系、里程碑和按工作量加权的执行进度。任务可归档、恢复、导出。甘特图通过点击任务编辑排期，不会自动移动其他任务的日期。
+
+真实项目需要 Supabase Auth 和数据库；只有加入项目的账号可以读取、更新该项目。设置项目阶段和加入成员仅限项目负责人。所有写操作经过数据库权限及版本校验，同一任务被同时修改时，后保存的一方会得到冲突提示。
+
+**当前仓库只提供页面、虚构演示和待接入的配置；未连接数据库时，不能保存真实团队项目。** 演示在内存中运行，刷新会重置，不会变成真实任务。真实项目记录不放入仓库，也不缓存为浏览器本地任务文件。
+
+接入方法见 [工作台配置说明](docs/workspace-setup.md)。公开配置在 `public/assets/planner-config.json`，只填项目 URL 和 publishable／anon key，禁止填入 secret／service_role key。数据库结构与权限在 `supabase/schema.sql`。
+
+本地检查：`node scripts/test-planner.mjs`、`node scripts/build.mjs`、`node scripts/check.mjs`。工作台脚本和样式分别为 `public/assets/planner.js`、`planner-model.js`、`planner.css`，入口为 `src/pages/planner.html`。
+
 ### 自动记录
 
 本对话的 Codex 自动任务每天北京时间 22:00 汇总本机可访问的《千禧频道》开发与学习相关对话。

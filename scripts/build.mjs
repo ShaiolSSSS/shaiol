@@ -21,11 +21,19 @@ function document(title,main,current,url){return '<!doctype html><html lang="zh-
 const dist=resolve(root,"dist");await mkdir(dist,{recursive:true});await cp(resolve(root,"public"),dist,{recursive:true});
 await writeFile(resolve(dist,"assets/site.js"),assets[1].replace('"./effects.js"','"./effects.js?v='+assetVersion+'"'));
 for(const page of pages){const main=rewrite(await readFile(resolve(root,"src/pages/"+page.source+".html"),"utf8"));const dir=resolve(dist,page.path);await mkdir(dir,{recursive:true});await writeFile(resolve(dir,"index.html"),document(page.title,main,page.nav,site+(page.path?page.path+"/":"")));}
+// The workspace has its own layout, assets and authentication. Do not add it to
+// the public portfolio navigation or load the portfolio animation/gate there.
+const plannerAssets=await Promise.all(["planner.css","planner.js","planner-model.js"].map(name=>readFile(resolve(root,"public/assets",name),"utf8")));
+const plannerVersion=createHash("sha256").update(plannerAssets.join("\n")).digest("hex").slice(0,12);
+const plannerSource=await readFile(resolve(root,"src/pages/planner.html"),"utf8");
+await mkdir(resolve(dist,"workspace"),{recursive:true});
+await writeFile(resolve(dist,"workspace/index.html"),plannerSource.replaceAll("__BASE__",prefix).replaceAll("__VERSION__",plannerVersion));
+await writeFile(resolve(dist,"assets/planner.js"),plannerAssets[1].replace('"./planner-model.js"','"./planner-model.js?v='+plannerVersion+'"'));
 const entries=await readJournal(root);
 const journalDir=resolve(dist,"logs");await mkdir(journalDir,{recursive:true});
 await writeFile(resolve(journalDir,"index.html"),document("工作日志 · Shaiol",journalIndex(entries,href),"",site+"logs/"));
 for(const [index,entry] of entries.entries()){const dir=resolve(journalDir,entry.date);await mkdir(dir,{recursive:true});await writeFile(resolve(dir,"index.html"),document(entry.title+" · Shaiol",journalEntry(entry,index,entries,href),"",site+"logs/"+entry.date+"/"));}
 await writeFile(resolve(dist,"404.html"),document("页面未找到 · Shaiol",'<main id="main" class="inner-page"><header class="page-heading"><h1>404</h1><p>这个页面不存在。</p></header><a class="backlink" href="'+prefix+'">← 返回首页</a></main>',"",site));
 await writeFile(resolve(dist,".nojekyll"),"");
-console.log("Built "+pages.length+" pages and "+entries.length+" journal entries with base "+prefix);
+console.log("Built "+pages.length+" pages, 1 isolated workspace and "+entries.length+" journal entries with base "+prefix);
 

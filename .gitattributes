@@ -1,0 +1,2 @@
+# Preserve the upstream browser bundle verbatim, including string whitespace.
+public/assets/vendor/supabase-2.118.0.js -text -whitespace

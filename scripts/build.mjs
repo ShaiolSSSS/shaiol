@@ -1,4 +1,4 @@
-import {readFile,mkdir,writeFile,cp} from "node:fs/promises";
+import {readFile,mkdir,writeFile,cp,rm} from "node:fs/promises";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
 import {readJournal,journalIndex,journalEntry,escapeHTML} from "./journal.mjs";
@@ -18,22 +18,16 @@ const gate='<div class="secret-gate"><form id="secret-entry" class="secret-entry
 const footer='<footer class="site-footer"><div class="footer-top"><a href="'+prefix+'" aria-label="Shaiol 首页">'+mark+'</a></div><div class="footer-bottom"><span>© 2026 SHAIOL</span><nav aria-label="页脚导航">'+links.map(([p,,zh])=>'<a href="'+href(p)+'">'+zh+'</a>').join("")+'</nav>'+gate+'</div></footer>';
 function rewrite(main){return main.replace(/href="(\/[^"]*)"/g,(_,url)=>{const [path,hash]=url.split("#");return 'href="'+href(path.replace(/^\/+|\/+$/g,""))+(hash?"#"+hash:"")+'"';});}
 function document(title,main,current,url){return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escapeHTML(title)+'</title><meta name="description" content="Shaiol 的个人网站、作品与公开创作笔记。"><meta name="theme-color" content="#ffffff"><link rel="canonical" href="'+url+'"><link rel="icon" href="'+prefix+'assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="'+prefix+'assets/site.css?v='+assetVersion+'"><script type="module" src="'+prefix+'assets/site.js?v='+assetVersion+'"></script></head><body data-base="'+prefix+'">'+header(current)+menu+'<div class="page-enter">'+main+'</div>'+footer+'</body></html>';}
-const dist=resolve(root,"dist");await mkdir(dist,{recursive:true});await cp(resolve(root,"public"),dist,{recursive:true});
+const dist=resolve(root,"dist");
+// Regenerate the output so removed pages and assets cannot survive a rebuild.
+await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});await cp(resolve(root,"public"),dist,{recursive:true});
 await writeFile(resolve(dist,"assets/site.js"),assets[1].replace('"./effects.js"','"./effects.js?v='+assetVersion+'"'));
 for(const page of pages){const main=rewrite(await readFile(resolve(root,"src/pages/"+page.source+".html"),"utf8"));const dir=resolve(dist,page.path);await mkdir(dir,{recursive:true});await writeFile(resolve(dir,"index.html"),document(page.title,main,page.nav,site+(page.path?page.path+"/":"")));}
-// The workspace has its own layout, assets and authentication. Do not add it to
-// the public portfolio navigation or load the portfolio animation/gate there.
-const plannerAssets=await Promise.all(["planner.css","planner.js","planner-model.js"].map(name=>readFile(resolve(root,"public/assets",name),"utf8")));
-const plannerVersion=createHash("sha256").update(plannerAssets.join("\n")).digest("hex").slice(0,12);
-const plannerSource=await readFile(resolve(root,"src/pages/planner.html"),"utf8");
-await mkdir(resolve(dist,"workspace"),{recursive:true});
-await writeFile(resolve(dist,"workspace/index.html"),plannerSource.replaceAll("__BASE__",prefix).replaceAll("__VERSION__",plannerVersion));
-await writeFile(resolve(dist,"assets/planner.js"),plannerAssets[1].replace('"./planner-model.js"','"./planner-model.js?v='+plannerVersion+'"'));
 const entries=await readJournal(root);
 const journalDir=resolve(dist,"logs");await mkdir(journalDir,{recursive:true});
 await writeFile(resolve(journalDir,"index.html"),document("工作日志 · Shaiol",journalIndex(entries,href),"",site+"logs/"));
 for(const [index,entry] of entries.entries()){const dir=resolve(journalDir,entry.date);await mkdir(dir,{recursive:true});await writeFile(resolve(dir,"index.html"),document(entry.title+" · Shaiol",journalEntry(entry,index,entries,href),"",site+"logs/"+entry.date+"/"));}
 await writeFile(resolve(dist,"404.html"),document("页面未找到 · Shaiol",'<main id="main" class="inner-page"><header class="page-heading"><h1>404</h1><p>这个页面不存在。</p></header><a class="backlink" href="'+prefix+'">← 返回首页</a></main>',"",site));
 await writeFile(resolve(dist,".nojekyll"),"");
-console.log("Built "+pages.length+" pages, 1 isolated workspace and "+entries.length+" journal entries with base "+prefix);
+console.log("Built "+pages.length+" pages and "+entries.length+" journal entries with base "+prefix);
 

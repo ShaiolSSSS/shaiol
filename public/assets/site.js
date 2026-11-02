@@ -5,9 +5,6 @@ toggle.addEventListener("click",()=>{menu.showModal();toggle.setAttribute("aria-
 menu.querySelector(".menu-close").addEventListener("click",()=>menu.close());
 menu.addEventListener("close",()=>{toggle.setAttribute("aria-expanded","false");document.body.style.overflow="";});
 menu.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>menu.close()));
-const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
-if(!reduced){let show=true;try{show=!sessionStorage.getItem("shaiol-intro-v4");sessionStorage.setItem("shaiol-intro-v4","seen");}catch{}
-if(show){const intro=document.createElement("div");intro.className="intro-screen intro-welcome";intro.innerHTML='<div class="intro-word" aria-label="WELCOME">'+[..."WELCOME"].map((letter,index)=>'<span class="intro-letter" aria-hidden="true" style="--letter:'+index+'">'+letter+'</span>').join("")+'<span class="intro-line" aria-hidden="true"></span></div><button>跳过 ↗</button>';document.body.append(intro);const finish=()=>intro.remove();intro.querySelector("button").addEventListener("click",finish);intro.addEventListener("animationend",event=>{if(event.target===intro)finish();});setTimeout(finish,1750);}}
 const star=document.querySelector(".secretstar"),door=document.querySelector(".secret-gate"),form=door.querySelector("form"),input=door.querySelector("input"),message=door.querySelector('[role="status"]'),submit=door.querySelector(".unlock"),footer=door.closest(".footer-bottom");
 let count=0,last=0,busy=false,generation=0;
 function closeGate(restoreFocus=false){

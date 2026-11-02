@@ -1,0 +1,12 @@
+/* Embedded in the HTML so the first frame does not wait for site assets. */
+html.intro-playing{overflow:hidden}
+.intro-screen[hidden]{display:none}
+.intro-screen{position:fixed;inset:0;background:#fff;z-index:200;display:flex;flex-direction:column;justify-content:center;align-items:center;animation:intro-exit .4s 1.25s both;pointer-events:auto}
+.intro-word{position:relative;font-family:Arial,"Helvetica Neue",sans-serif;font-weight:400;font-size:clamp(28px,5.5vw,64px);letter-spacing:.2em;line-height:1.1;white-space:nowrap}
+.intro-letter{display:inline-block;opacity:0;animation:welcome-letter .001s calc(.22s + var(--letter)*.06s) both}
+.intro-line{position:absolute;left:0;right:0;height:1px;bottom:-22px;background:#080808;transform:scaleX(0);transform-origin:center;animation:welcome-line .34s .7s both}
+.intro-screen>button{position:absolute;bottom:32px;right:32px;font:11px Arial,"Helvetica Neue",sans-serif;border:0;background:none;color:#777;padding:12px;cursor:pointer}
+@keyframes welcome-letter{from{opacity:0}to{opacity:1}}
+@keyframes welcome-line{0%{transform:scaleX(0)}75%{transform:scaleX(1.04)}100%{transform:scaleX(1)}}
+@keyframes intro-exit{to{opacity:0;transform:translateY(-10%);visibility:hidden;pointer-events:none}}
+@media(prefers-reduced-motion:reduce){.intro-screen{display:none}}

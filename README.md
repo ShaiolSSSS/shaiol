@@ -31,12 +31,14 @@
 - 共用导航和页脚：scripts/build.mjs
 - 日志阅读页与 Markdown 格式：scripts/journal.mjs
 - 样式：public/assets/site.css
-- 菜单、入场动画与星门：public/assets/site.js
+- 菜单与星门：public/assets/site.js
+- 入场动画与首屏启动：public/assets/intro.js、public/assets/intro.css（构建时内嵌到 HTML）
 - 反色鼠标圆点与惯性滚动：public/assets/effects.js
 
 提交到 main 后，GitHub Actions 自动构建并发布。无需安装依赖。
 日志支持标题、段落、列表、引用、代码块、行内代码、粗体和链接。原始 HTML 会显示为文字。
 本地运行 node scripts/build.mjs、node scripts/check.mjs，然后 node scripts/preview.mjs。
+入场动画回归检查：构建后运行 node --test scripts/test-intro.mjs；自动部署时也会执行。
 
 直接在 GitHub 打开上面的内容文件，点编辑，完成后把修改提交到 `main`，网站就会自动更新。
 每日日志的标题和正文都在对应日期的 `.md` 文件里。文章页面可以修改 HTML 标签中的文字和链接；保留标签结构。
@@ -49,6 +51,7 @@
 桌面滚轮有渐缓惯性；手机触摸、弹窗、可独立滚动区域、键盘和滚动条保留浏览器原有操作。
 滚动使用 [Lenis](https://github.com/darkroomengineering/lenis) 1.3.26，随站点托管在 `public/assets/vendor/`，不依赖外部 CDN；许可证见同目录的 `lenis-LICENSE.txt`。
 入场画面先留白，逐字显示 WELCOME，再从字底中心展开横线，随后向上淡出；同一浏览会话只播放一次。
+欢迎画面和启动代码随 HTML 提前提供，在正文解析前启动，不等待滚动特效等模块下载；脚本不可用时直接显示正文，动画结束、跳过或超时后自动解除遮罩。
 系统开启“减少动态效果”后，停用滚动惯性和鼠标跟随延迟。
 
 ## 星门

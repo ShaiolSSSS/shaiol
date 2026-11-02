@@ -32,6 +32,8 @@ jobs:
         run: node scripts/check.mjs
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - name: Check welcome startup
+        run: node --test scripts/test-intro.mjs
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

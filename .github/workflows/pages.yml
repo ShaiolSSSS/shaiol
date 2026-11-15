@@ -11,11 +11,12 @@ concurrency:
   group: pages
   cancel-in-progress: false
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PAGES_ARTIFACT_NAME: github-pages-${{ github.run_attempt }}
+    outputs:
+      artifact_name: ${{ env.PAGES_ARTIFACT_NAME }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
@@ -36,8 +37,19 @@ jobs:
         run: node --test scripts/test-intro.mjs
       - uses: actions/upload-pages-artifact@v4
         with:
+          name: ${{ env.PAGES_ARTIFACT_NAME }}
           path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ needs.build.outputs.artifact_name }}
 

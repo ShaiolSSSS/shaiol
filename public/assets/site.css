@@ -16,3 +16,13 @@ html.lenis,html.lenis body{height:auto}html.lenis{scroll-behavior:auto!important
 @media(max-width:800px){.journal-row{grid-template-columns:1fr 25px;gap:12px;padding:28px 0}.journal-row time{grid-column:1/-1;padding-top:0}.journal-row h2{font-size:19px}.journal-meta{font-size:10px}.journal-entry .page-heading .article-title{font-size:clamp(27px,6.5vw,46px);letter-spacing:.02em}.journal-pagination{gap:12px;font-size:11px}.journal-copy{font-size:14px}.journal-copy code{font-size:12px}}
 
 
+.writing-page .journal-list { border-top: 1px solid var(--line); }
+@media (max-width: 800px) {
+  .menu-dialog[open] { align-content: safe center; }
+  .menu-copyright { position: static; }
+}
+@media (max-width: 420px) {
+  .primary-nav { gap: 10px; }
+  .notes-section .section-heading { flex-wrap: wrap; gap: 18px; }
+  .writing-page .page-heading h1 { font-size: clamp(48px, 16vw, 72px); }
+}

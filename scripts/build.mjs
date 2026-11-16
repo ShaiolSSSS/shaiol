@@ -9,7 +9,7 @@ const assetVersion=createHash("sha256").update(assets.join("\n")).digest("hex").
 const base="/"+(process.env.BASE_PATH||"/shaiol").replace(/^\/+|\/+$/g,"");
 const prefix=base==="/"?"/":base+"/";
 const site="https://shaiolssss.github.io"+prefix;
-const pages=[{path:"",source:"home",title:"Shaiol",nav:"home"},{path:"works",source:"works",title:"作品 · Shaiol",nav:"works"},{path:"about",source:"about",title:"关于 · Shaiol",nav:"about"},{path:"projects/channel2000",source:"channel2000",title:"千禧频道 · Shaiol",nav:"works"},{path:"notes/about-this-space",source:"about-this-space",title:"给想法、学习和作品留一个地方 · Shaiol",nav:"notes"}];
+const pages=[{path:"",source:"home",title:"Shaiol",nav:"home"},{path:"works",source:"works",title:"作品 · Shaiol",nav:"works"},{path:"about",source:"about",title:"关于 · Shaiol",nav:"about"},{path:"projects/channel2000",source:"channel2000",title:"千禧频道 · Shaiol",nav:"works"},{path:"notes/about-this-space",source:"about-this-space",title:"给想法、学习和作品留一个地方 · Shaiol",nav:"about"}];
 const links=[["","Home","首页","home"],["works","Works","作品","works"],["notes","Writing","随笔","notes"],["about","About","关于","about"]];
 const mark='<span class="wordmark">Shaiol<span class="wordmark-dot">.</span></span>';
 const href=p=>prefix+(p?p+"/":"");
@@ -29,10 +29,10 @@ for(const page of pages){const main=rewrite(await readFile(resolve(root,"src/pag
 await mkdir(resolve(dist,"notes"),{recursive:true});
 await writeFile(resolve(dist,"notes/index.html"),document("Writing · Shaiol",writingIndex(writing,href),"notes",site+"notes/"));
 for (const entry of writing) {
-  const path="notes/"+entry.slug;
+  const path="notes/"+entry.date;
   const dir=resolve(dist,path);
   await mkdir(dir,{recursive:true});
-  await writeFile(resolve(dir,"index.html"),document(entry.title+" · Shaiol",writingEntry(entry,href),"notes",site+path+"/"));
+  await writeFile(resolve(dir,"index.html"),document(entry.date+" · 随笔 · Shaiol",writingEntry(entry,href,prefix),"notes",site+path+"/"));
 }
 const entries=await readJournal(root);
 const journalDir=resolve(dist,"logs");await mkdir(journalDir,{recursive:true});

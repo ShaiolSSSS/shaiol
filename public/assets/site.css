@@ -17,6 +17,10 @@ html.lenis,html.lenis body{height:auto}html.lenis{scroll-behavior:auto!important
 
 
 .writing-page .journal-list { border-top: 1px solid var(--line); }
+.writing-page .journal-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.writing-page .journal-row time { grid-column: auto; padding: 0; font-size: 20px; color: var(--ink); }
+.writing-copy figure { margin: 25px 0; }
+.writing-copy img { display: block; max-width: 100%; height: auto; }
 @media (max-width: 800px) {
   .menu-dialog[open] { align-content: safe center; }
   .menu-copyright { position: static; }

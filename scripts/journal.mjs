@@ -29,7 +29,7 @@ function inline(value) {
   return result + escapeHTML(value.slice(start));
 }
 
-export function renderMarkdown(markdown) {
+export function renderMarkdown(markdown, {imageBase} = {}) {
   const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
   const blocks = [];
   let paragraph = [], list = [], listType = "", code = null, quotes = [];
@@ -45,6 +45,12 @@ export function renderMarkdown(markdown) {
     }
     if (/^```/.test(line)) { flush(); code = []; continue; }
     if (!line.trim()) { flush(); continue; }
+    const image = imageBase && line.match(/^!\[([^\]]*)\]\(([a-z0-9][a-z0-9._-]*\.(?:png|jpe?g|webp|gif))\)$/i);
+    if (image) {
+      flush();
+      blocks.push('<figure><img src="' + escapeHTML(imageBase + image[2]) + '" alt="' + escapeHTML(image[1]) + '"></figure>');
+      continue;
+    }
     const heading = line.match(/^(#{1,6})\s+(.+)$/);
     if (heading) { flush(); const level = Math.max(2, heading[1].length); blocks.push("<h" + level + ">" + inline(heading[2]) + "</h" + level + ">"); continue; }
     const item = line.match(/^\s*(?:[-*+]\s+|(\d+)[.)]\s+)(.+)$/);
